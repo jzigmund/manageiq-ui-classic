@@ -111,11 +111,20 @@ class TreeBuilderPolicy < TreeBuilder
 
   # level 5 - actions under events
   def x_get_tree_ev_kids(parent, count_only, parents)
+    actions = {}
     # the policy from level 3
+    binding.pry if parent[:id] == 10000000000251
     pol_rec = node_by_tree_id(parents.last)
+    puts "POL REC #{pol_rec.inspect}"
 
     success = count_only_or_objects(count_only, pol_rec ? pol_rec.actions_for_event(parent, :success) : [])
     failure = count_only_or_objects(count_only, pol_rec ? pol_rec.actions_for_event(parent, :failure) : [])
+    puts "SUCCESS #{success}"
+    puts "FAILURE #{failure}"
     success + failure
+    #actions[:success] = success if success.present?
+    #actions[:failure] = failure if failure.present?
+    #puts "ACTIONS - #{actions}"
+    #actions
   end
 end

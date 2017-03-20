@@ -12,6 +12,7 @@ module TreeNode
         end
         p  = ::MiqPolicy.find_by_id(ApplicationRecord.uncompress_id(policy_id))
         ev = ::MiqEventDefinition.find_by_id(ApplicationRecord.uncompress_id(event_id))
+        binding.pry if @object[:name] == "cancel_task"
 
         p.action_result_for_event(@object, ev) ? "pficon pficon-ok" : "pficon pficon-error-circle-o"
       else

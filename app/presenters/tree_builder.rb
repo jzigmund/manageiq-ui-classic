@@ -22,6 +22,7 @@ class TreeBuilder
     # FIXME: remove @name or @tree, unify
     @type               = type.to_sym                     # *usually* same as @name but w/o _tree
 
+    binding.pry if name == :policy_tree
     add_to_sandbox
     build_tree if build
   end
@@ -255,6 +256,15 @@ class TreeBuilder
 
     object, ancestry_kids = object_from_ancestry(object)
     node = x_build_single_node(object, pid, options)
+    #binding.pry if object.kind_of?(Array) && object.first.kind_of?(Symbol)
+    #binding.pry if object.kind_of?(Array)
+    #if object.kind_of?(Array)
+    #  real_object = object[1].first
+    #else
+    #  real_object = object
+    #end
+    #object, ancestry_kids = object_from_ancestry(real_object)
+    #node = x_build_single_node(real_object, pid, options)
 
     # Process the node's children
     node[:expand] = Array(@tree_state.x_tree(@name)[:open_nodes]).include?(node[:key]) || !!options[:open_all] || node[:expand]
@@ -277,7 +287,11 @@ class TreeBuilder
 
   def x_build_single_node(object, pid, options)
     # FIXME: to_h is for backwards compatibility with hash-trees, it needs to be removed in the future
-    node = TreeNode.new(object, pid, options).to_h
+    begin
+      node = TreeNode.new(object, pid, options).to_h
+    rescue
+      binding.pry
+    end
     override(node, object, pid, options) if self.class.method_defined?(:override) || self.class.private_method_defined?(:override)
     node
   end

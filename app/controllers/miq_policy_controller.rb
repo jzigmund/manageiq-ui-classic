@@ -225,6 +225,7 @@ class MiqPolicyController < ApplicationController
 
     self.x_active_tree ||= 'policy_profile_tree'
     self.x_active_accord ||= 'policy_profile'
+    binding.pry
 
     trees = features.collect { |feature| [feature.tree_name, feature.build_tree(@sb)] }
     @trees = Hash[* trees.flatten] # trees.to_h in Ruby 2.2
@@ -482,6 +483,7 @@ class MiqPolicyController < ApplicationController
     # we need to be able to replace trees even if explorer has never been called on the current instance
     @trees = {} unless @trees
     trees  = {}
+    binding.pry
     replace_trees.each do |name|
       tree = @trees["#{name}_tree".to_sym]
       tree.reload! unless tree.nil?
