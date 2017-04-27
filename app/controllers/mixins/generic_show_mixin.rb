@@ -1,7 +1,6 @@
 module Mixins
   module GenericShowMixin
     def show
-      return if perfmenu_click?
       return unless init_show
       @center_toolbar = self.class.toolbar_singular if self.class.toolbar_singular
 
@@ -106,6 +105,7 @@ module Mixins
     end
 
     def init_show(model_class = self.class.model)
+      return false if perfmenu_click?
       @record = identify_record(params[:id], model_class)
       return false if record_no_longer_exists?(@record)
       @lastaction = 'show'

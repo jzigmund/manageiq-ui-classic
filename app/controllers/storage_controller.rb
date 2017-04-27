@@ -2,6 +2,7 @@ class StorageController < ApplicationController
   include_concern 'StorageD'
   include_concern 'StoragePod'
   include Mixins::GenericSessionMixin
+  include Mixins::GenericShowMixin
 
   before_action :check_privileges
   before_action :get_session_data
@@ -27,13 +28,11 @@ class StorageController < ApplicationController
     @gtl_url = "/show"
   end
 
-  def show(record = nil)
-    return if perfmenu_click?
-    @display = params[:display] || "main" unless pagination_or_gtl_request?
-    @record = @storage = find_record(Storage, record || params[:id])
-    return if record_no_longer_exists?(@storage)
-
+  def show
+    # coming from different resource (i.e. Host's datastore)
     if !@explorer && @display == "main"
+      init_show
+      puts "NON EXPLORER"
       tree_node_id = TreeBuilder.build_node_id(@record)
       session[:exp_parms] = {:display => @display, :refresh => params[:refresh], :id => tree_node_id}
 
@@ -56,42 +55,15 @@ class StorageController < ApplicationController
                   :action     => action
       return
     end
-
-    @gtl_url = "/show"
-
-    case @display
-    when "all_miq_templates", "all_vms"
-      title, kls = (@display == "all_vms" ? ["VMs", Vm] : ["Templates", MiqTemplate])
-      drop_breadcrumb(:name => _("%{name} (All Registered %{title})") % {:name => @storage.name, :title => title},
-                      :url  => "/storage/x_show/#{@storage.id}?display=#{@display}")
-      @view, @pages = get_view(kls, :parent => @storage, :association => @display)  # Get the records (into a view) and the paginator
-      @showtype = @display
-
-    when "hosts"
-      @view, @pages = get_view(Host, :parent => @storage) # Get the records (into a view) and the paginator
-      drop_breadcrumb(:name => _("%{name} (All Registered Hosts)") % {:name => @storage.name},
-                      :url  => "/storage/x_show/#{@storage.id}?display=hosts")
-      @showtype = "hosts"
-
-    when "main", "summary_only"
-      get_tagdata(@storage)
-      session[:vm_summary_cool] = (settings(:views, :vm_summary_cool) == "summary")
-      @summary_view = session[:vm_summary_cool]
-      drop_breadcrumb({:name => ui_lookup(:tables => "storages"), :url => "/storage/show_list?page=#{@current_page}&refresh=y"}, true)
-      drop_breadcrumb(:name => "%{name} (Summary)" % {:name => @storage.name},
-                      :url  => "/storage/x_show/#{@storage.id}?display=main")
-      @showtype = "main"
-      set_summary_pdf_data if @display == "summary_only"
-
-    when "performance"
-      @showtype = "performance"
-      drop_breadcrumb(:name => _("%{name} Capacity & Utilization") % {:name => @storage.name},
-                      :url  => "/storage/x_show/#{@storage.id}?display=#{@display}&refresh=n")
-      perf_gen_init_options               # Intialize perf chart options, charts will be generated async
-    end
-    @lastaction = "show"
+    super
   end
 
+  def self.display_methods
+    #TODO fix the all_miq_templates and all_vms by already defined methods?
+    %w(all_miq_templates all_vms)
+  end
+
+  def
 
   # handle buttons pressed on the button bar
   def button
@@ -262,6 +234,7 @@ class StorageController < ApplicationController
   end
 
   def x_show
+    puts "X_SHOW"
     @storage = @record = identify_record(params[:id], Storage)
     generic_x_show
   end
